@@ -1,7 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
-import authRouter from "./routes/auth.js";
+//import authRouter from "./routes/auth.js";
 import userRouter from "./routes/user.js";
 import eventRouter from "./routes/event.js";
 import venueRouter from "./routes/venue.js";
@@ -11,6 +11,8 @@ import cors from "cors";
 
 
 const app = express();
+app.use(bodyParser.urlencoded({ extended: false }));
+
 dotenv.config();
 
 const connect = async () => {
@@ -33,9 +35,20 @@ app.use(cors());
 app.use(cookieParser());
 app.use(express.json());
 
+//Setup database models
+require('./model/User');
+require('./model/Venue');
+require('./model/Event');
+
+//setup routes
+require('./routes/user')(app);
+require('./routes/event')(app);
+require('./routes/venue')(app);
+
 app.use("/api/user", userRouter);
 app.use("/api/event", eventRouter);
 app.use("/api/venue", venueRouter);
+
 
 app.use((err,req,res,next)=>{
     const errorStatus = err.status || 500 ;

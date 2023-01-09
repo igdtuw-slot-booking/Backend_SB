@@ -8,6 +8,7 @@ import venueRouter from "./routes/venue.js";
 import { createError } from "./utils/error.js";
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import bodyParser from "body-parser";
 
 
 const app = express();

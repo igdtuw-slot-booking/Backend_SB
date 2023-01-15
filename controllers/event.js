@@ -1,4 +1,5 @@
 import Event from "../models/Event.js";
+import Venue from "../models/Venue.js";
 import User from "../models/User.js";
 import ApiFeatures from "../utils/apifeatures.js";
 import { createError } from "../utils/error.js";
@@ -129,3 +130,35 @@ export const countByStatus = async (req,res,next)=>{
         next(err);
     }
 };
+
+//Update event status to cancel --user
+export const updateEventByUser = async (req,res,next)=>{
+    try{
+        //const updateEvent = await Event.findByIdAndUpdate(req.params.id, { $set: req.body }, { new: true })
+        const updateEvent = await Event.findById(req.params.id);
+
+        if(!updateEvent){
+            return next(createError(404, "Event not found with this Id"))
+        };
+
+        if(updateEvent.user == req.user.id){
+
+            if(updateEvent.status=== "Cancelled"){
+                return next(createError(400, "You have already cancelled this event"));
+            };
+            updateEvent.status = req.body.status;
+
+            if(req.body.status === "Cancelled"){
+                updateEvent.reviewedAt = Date.now();
+            };
+        }else{
+            return next(createError(400, "You are not authorized"));
+        };
+        
+        await updateEvent.save({ validateBeforeSave: false});
+        res.status(200).json(updateEvent)
+    } catch(err){
+        next(err);
+    }
+};
+

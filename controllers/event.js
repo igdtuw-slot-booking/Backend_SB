@@ -33,7 +33,7 @@ export const createEvent = async (req,res,next)=>{
             status,
             venue,
             bookedAt: Date.now(),
-            user: req.user.id,
+            user: req.user._id,
         });
     
         res.status(200).json(event)
@@ -99,7 +99,7 @@ export const getSingleEvent = async (req,res,next)=>{
 //Get logged in user Events
 export const myEvents = async (req,res,next)=>{
     //console.log(req.user.id);
-    const apiFeatures = new ApiFeatures(Event.find({ user: req.user.id }),req.query).filter();
+    const apiFeatures = new ApiFeatures(Event.find({ user: req.user._id }),req.query).filter();
     try{
         const events = await (apiFeatures.query).populate("venue");
         
@@ -141,7 +141,7 @@ export const updateEventByUser = async (req,res,next)=>{
             return next(createError(404, "Event not found with this Id"))
         };
 
-        if(updateEvent.user == req.user.id){
+        if(updateEvent.user == req.user._id){
 
             if(updateEvent.status=== "Cancelled"){
                 return next(createError(400, "You have already cancelled this event"));

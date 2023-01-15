@@ -27,6 +27,14 @@ const UserSchema = new mongoose.Schema({
 }, {timestamps: true}
 );
 
+UserSchema.methods.matchPassword = async function (password) {
+    return await bcrypt.compare(password, this.password);
+ };
+  
+UserSchema.methods.generateToken = function () {
+    return jwt.sign({ _id: this._id }, process.env.JWT);
+};
+
 //Generating Password Reset Token
 UserSchema.methods.getResetPasswordToken = function () {
 

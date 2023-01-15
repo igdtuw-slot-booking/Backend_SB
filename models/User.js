@@ -1,8 +1,8 @@
 import mongoose from 'mongoose';
 import validator from 'validator';
 import crypto from 'crypto';
-import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
 
 
 const UserSchema = new mongoose.Schema({
@@ -16,25 +16,42 @@ const UserSchema = new mongoose.Schema({
     password:{
         type: String,
         required: [true, "Enter your Password"],
-        minLength: [6, "Password should be greater than 6 characters"]
+        minlength: [6, "Password should be greater than 6 characters"]
     },
-    isAdmin:{
-        type: Boolean,                    //while testing.. yea attribute default to false le raha hai but even true type karne pe bhi db mea false store ho raha hai ..so ekk baar dekh lena
-        default: false
+    role: {
+        type: String,
+        default: "user",
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now,
     },
 
     resetPasswordToken: String,
     resetPasswordExpire: Date,
     
-}, {timestamps: true}
+}
 );
 
-UserSchema.methods.matchPassword = async function (password) {
-    return await bcrypt.compare(password, this.password);
- };
+UserSchema.pre("save", async function (next) {
+    if (!this.isModified("password")) {
+      next();
+    }
   
-UserSchema.methods.generateToken = function () {
-    return jwt.sign({ _id: this._id }, process.env.JWT);
+    this.password = await bcrypt.hash(this.password, 10);
+});
+  
+  // JWT TOKEN
+UserSchema.methods.getJWTToken = function () {
+    return jwt.sign({ id: this._id }, process.env.JWT, {
+      expiresIn: 5,
+    });
+};
+  
+  // Compare Password
+  
+UserSchema.methods.comparePassword = async function (password) {
+    return await bcrypt.compare(password, this.password);
 };
 
 //Generating Password Reset Token

@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import { createError } from "./error.js";
+//import catchAsyncErrors from "./catchAsyncErrors.js";
 
 export const verifyToken = (req,res,next)=>{
     const token = req.cookies.access_token;
@@ -51,7 +52,7 @@ export const verifyAdmin = (req,res,next)=>{
 };
 
 export const sendToken = (user, statusCode, res) => {
-    const token = jwt.sign({ id: user._id, isAdmin: user.isAdmin }, process.env.JWT);
+    const token = user.getJWTToken();
     //options for cookie
     const options= {
         expires: new Date(
@@ -65,5 +66,34 @@ export const sendToken = (user, statusCode, res) => {
         user,
         token,
     });
+};
+
+export const isAuthenticatedUser = async (req, res, next) => {
+    const { token } = req.cookies;
+  
+    if (!token) {
+      return next(createError(401,"Please Login to access this resource"));
+    }
+  
+    const decodedData = jwt.verify(token, process.env.JWT);
+  
+    req.user = await User.findById(decodedData.id);
+  
+    next();
+};
+  
+export const authorizeRoles = (...roles) => {
+    return (req, res, next) => {
+      if (!roles.includes(req.user.role)) {
+        return next(
+          createError(
+            403,
+            `Role: ${req.user.role} is not allowed to access this resouce `
+          )
+        );
+      }
+  
+      next();
+    };
 };
 

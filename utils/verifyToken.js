@@ -68,18 +68,26 @@ export const sendToken = (user, statusCode, res) => {
     });
 };
 
-export const isAuthenticatedUser = async (req, res, next) => {
-    const { token } = req.cookies;
-  
-    if (!token) {
-      return next(createError(401,"Please Login to access this resource"));
+export const isAuthenticatedUser = async (req,res,next) => {
+    try {
+        const { token } = req.cookies;
+    
+        if (!token) {
+          return res.status(401).json({
+            message: "Please login first",
+          });
+        }
+    
+        const decoded = await jwt.verify(token, process.env.JWT);
+    
+        req.user = await User.findById(decoded._id);
+    
+        next();
+    } catch (error) {
+        res.status(500).json({
+          message: error.message,
+        });
     }
-  
-    const decodedData = jwt.verify(token, process.env.JWT);
-  
-    req.user = await User.findById(decodedData.id);
-  
-    next();
 };
   
 export const authorizeRoles = (...roles) => {

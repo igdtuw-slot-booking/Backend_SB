@@ -12,15 +12,14 @@ import { sendToken } from "../utils/verifyToken.js";
 
 export const register = async (req,res,next)=>{
     try{
-        const salt= bcrypt.genSaltSync(7);
-        const hash= bcrypt.hashSync(req.body.password, salt);
+        const { email, password } = req.body;
 
-        const newUser = new User({
-            ...req.body,
-            password: hash
-        })
-        await newUser.save()
-        res.status(200).send("User has been created.")
+        const user = await User.create({
+            email,
+            password
+        });
+
+        sendToken(user, 201, res);
     }catch(err){
         next(err);
     }
@@ -30,42 +29,27 @@ export const login = async (req,res,next)=>{
     try{
         const { email, password } = req.body;
 
-    const user = await User.findOne({ email })
-      .select("+password");
+  // checking if user has given password and email both
 
-    if (!user) {
-      return res.status(400).json({
-        success: false,
-        message: "User does not exist",
-      });
-    }
+        if (!email || !password) {
+           return next(new ErrorHander("Please Enter Email & Password", 400));
+        }
 
-    const isMatch = await user.matchPassword(password);
+        const user = await User.findOne({ email }).select("+password");
 
-    if (!isMatch) {
-      return res.status(400).json({
-        success: false,
-        message: "Incorrect password",
-      });
-    }
+        if (!user) {
+            return next(createError( 401, "Invalid email or password"));
+        }
 
-    const token = await user.generateToken();
+        const isPasswordMatched = await user.comparePassword(password);
 
-    const options = {
-      expires: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
-      httpOnly: true,
-    };
+        if (!isPasswordMatched) {
+            return next(createError( 401, "Invalid email or password"));
+        }
 
-    res.status(200).cookie("token", token, options).json({
-      success: true,
-      user,
-      token,
-    });
-    }catch(error){
-      res.status(500).json({
-      success: false,
-      message: error.message,
-      });
+        sendToken(user, 200, res);
+    }catch(err){
+        next(err);
     }
 };
 
@@ -112,7 +96,7 @@ export const getallUser = async (req,res,next)=>{
 //LOGOUT User
 export const logout = async (req,res,next)=>{
     try{
-        res.cookie("access_token", token, {
+        res.cookie(token, null, {
             expires: new Date(Date.now()),
             httpOnly: true
         });
@@ -137,7 +121,7 @@ export const forgotPassword = async (req,res,next)=>{
         const resetToken = user.getResetPasswordToken();
         await user.save({ validateBeforeSave: false});
 
-        const resetPasswordUrl =  `http://localhost:8877/api/user/password/reset/${resetToken}`;
+        const resetPasswordUrl =  `https://slotbooking-bk.onrender.com/api/user/password/reset/${resetToken}`;
 
         const message = `Your password reset token is :-\n\n ${resetPasswordUrl} \n\nIf you have not requested this email then, please ignore it `;
 
@@ -192,5 +176,8 @@ export const resetPassword = async (req,res,next)=>{
     sendToken(user, 200, res);
 
 };
+
+
+
 
 

@@ -97,7 +97,7 @@ export const getallUser = async (req,res,next)=>{
 //LOGOUT User
 export const logout = async (req,res,next)=>{
     try{
-        res.cookie(token, null, {
+        res.cookie("token", null, {
             expires: new Date(Date.now()),
             httpOnly: true
         });
@@ -122,7 +122,7 @@ export const forgotPassword = async (req,res,next)=>{
         const resetToken = user.getResetPasswordToken();
         await user.save({ validateBeforeSave: false});
 
-        const resetPasswordUrl =  `https://slotbooking-bk.onrender.com/api/user/password/reset/${resetToken}`;
+        const resetPasswordUrl =  `${req.protocol}://${req.get("host")}/password/reset/${resetToken}`;
 
         const message = `Your password reset token is :-\n\n ${resetPasswordUrl} \n\nIf you have not requested this email then, please ignore it `;
 
@@ -165,12 +165,12 @@ export const resetPassword = async (req,res,next)=>{
         return next(createError(400, "Password does not password"));
     }
 
-    const salt= bcrypt.genSaltSync(7);
-    const hash= bcrypt.hashSync(req.body.password, salt);
+    //const salt= bcrypt.genSaltSync(7);
+    //const hash= bcrypt.hashSync(req.body.password, salt);
 
-    user.password = hash ;
-    user.resetPasswordToken = undefined ;
-    user.resetPasswordExpire = undefined ;
+    user.password = req.body.password;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
 
     await user.save();
 

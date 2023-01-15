@@ -1,6 +1,6 @@
 import express from "express";
 import { updateUser , deleteUser , getUser , getallUser, register, login, logout, forgotPassword, resetPassword } from "../controllers/user.js";
-import { verifyAdmin, verifyToken, verifyUser } from "../utils/verifyToken.js";
+import { verifyAdmin, verifyToken, verifyUser, isAuthenticatedUser } from "../utils/verifyToken.js";
 //import { register, login} from "../controllers/auth.js";
 
 const router = express.Router();
@@ -31,7 +31,7 @@ router.put("/:id", updateUser);
 router.delete("/:id", deleteUser );
 
 //GET
-router.get("/i", verifyUser, getUser);
+router.get("/i", isAuthenticatedUser, getUser);
 
 //GETALL
 router.get("/", getallUser);

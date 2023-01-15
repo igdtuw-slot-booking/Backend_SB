@@ -7,15 +7,16 @@ import eventRouter from "./routes/event.js";
 import venueRouter from "./routes/venue.js";
 import { createError } from "./utils/error.js";
 import cookieParser from "cookie-parser";
-import cors from "cors";
 import bodyParser from "body-parser";
+import path from "path";
+import fileUpload from "express-fileupload";
+import cors from "cors";
+//import { errorH } from "./utils/errorH.js";
 
 
 const app = express();
 dotenv.config();
 
-
-mongoose.set("strictQuery", false);
 const connect = async () => {
     try {
         await mongoose.connect(process.env.MONGO)
@@ -32,9 +33,12 @@ mongoose.connection.on("disconnected", ()=>{
 
 //middleware
 
+app.use(express.json());
 app.use(cors());
 app.use(cookieParser());
-app.use(express.json());
+app.use(bodyParser.urlencoded({extended: true}));
+app.use(fileUpload());
+
 
 app.use("/api/user", userRouter);
 app.use("/api/event", eventRouter);
@@ -75,6 +79,7 @@ app.use((err,req,res,next)=>{
         stack: err.stack
     });
 });
+
 
 
 

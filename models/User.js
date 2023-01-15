@@ -43,9 +43,7 @@ UserSchema.pre("save", async function (next) {
   
   // JWT TOKEN
 UserSchema.methods.getJWTToken = function () {
-    return jwt.sign({ id: this._id }, process.env.JWT, {
-      expiresIn: 5,
-    });
+    return jwt.sign({ id: this._id }, process.env.JWT);
 };
   
   // Compare Password

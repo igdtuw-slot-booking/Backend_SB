@@ -12,11 +12,12 @@ import { sendToken } from "../utils/verifyToken.js";
 
 export const register = async (req,res,next)=>{
     try{
-        const { email, password } = req.body;
+        const { email, password, role } = req.body;
 
         const user = await User.create({
             email,
-            password
+            password,
+            role
         });
 
         sendToken(user, 201, res);
